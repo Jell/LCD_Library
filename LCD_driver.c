@@ -5,6 +5,7 @@
 //************************************************************************
 //*	Edit History
 //*		<MLS>	= Mark Sproul msproul -at- jove.rutgers.edu
+//*             <JLG>   = Jean-Louis Giordano, jell_del_sol -at- hotmail.com
 //************************************************************************
 //*	Apr  2,	2010	<MLS> I received my Color LCD Shield sku: LCD-09363 from sparkfun
 //*	Apr  2,	2010	<MLS> The code was written for WinAVR, I modified it to compile under Arduino
@@ -12,6 +13,7 @@
 //*	Apr  3,	2010	<MLS> Made LCDSetPixel public
 //*	Apr  3,	2010	<MLS> Working on MEGA, pin defs in nokia_tester.h
 //*	Apr  4,	2010	<MLS> Removed delays from LCDCommand & LCDCommand, increased speed by 75%
+//*     Jul 30, 2011    <JLG> Changed library to work with Phillips controller.
 //************************************************************************
 #include "LCD_driver.h"
 #include <string.h>
@@ -50,24 +52,24 @@ unsigned int i;
 		LCDCommand(RAMWR);
 	#endif
 	#ifdef	PHILLIPS
-		LCDCommand(PASETP);
+		LCDCommand(P_PASET);
 		LCDData(0);
 		LCDData(131);
 	
-		LCDCommand(CASETP);
+		LCDCommand(P_CASET);
 		LCDData(0);
 		LCDData(131);
 
-		LCDCommand(RAMWRP);
+		LCDCommand(P_RAMWR);
 	#endif
 	
 	for (i=0; i < (131*131)/2; i++)
 	{
+          
 		LCDData((color >> 4) & 0x00FF);
-		LCDData(((color & 0x0F) << 4) | (color >> 8));
+		LCDData(((color & 0x0F) << 4) | ((color >> 8) & 0x0F));
 		LCDData(color & 0x0FF);		// nop(EPSON)
 	}
-	
 //	x_offset = 0;
 //	y_offset = 0;
 }
@@ -96,14 +98,14 @@ void LCDCommand(unsigned char data)
 {
 char jj;
 	cbi(LCD_PORT_CS, CS);		// enable chip, p0.20 goes low
-	//delay_us(1);
+	delay_us(1);
 	cbi(LCD_PORT_DIO, DIO);		// output low on data out (9th bit low = command), p0.19
-	//delay_us(1);
+	delay_us(1);
 
 	cbi(LCD_PORT_SCK, SCK);		// send clock pulse
 	delay_us(1);
 	sbi(LCD_PORT_SCK, SCK);
-	//delay_us(1);
+	delay_us(1);
 
 	for (jj = 0; jj < 8; jj++)
 	{
@@ -115,10 +117,10 @@ char jj;
 		{
 			cbi(LCD_PORT_DIO, DIO);
 		}
-		//delay_us(1);
+		delay_us(1);
 
 		cbi(LCD_PORT_SCK, SCK);		// send clock pulse
-	//+	delay_us(1);
+		delay_us(1);
 		sbi(LCD_PORT_SCK, SCK);
 
 		data <<= 1;
@@ -137,14 +139,14 @@ void LCDData(unsigned char data)
 char j;
 
 	cbi(LCD_PORT_CS, CS);			// enable chip, p0.20 goes low
-	//delay_us(1);
+	delay_us(1);
 	sbi(LCD_PORT_DIO, DIO);			// output high on data out (9th bit high = data), p0.19
-	//delay_us(1);
+	delay_us(1);
 	
 	cbi(LCD_PORT_SCK, SCK);			// send clock pulse
-//+	delay_us(1);
+	delay_us(1);
 	sbi(LCD_PORT_SCK, SCK);			// send clock pulse
-	//delay_us(1);
+	delay_us(1);
 
 	for (j = 0; j < 8; j++)
 	{
@@ -156,10 +158,10 @@ char j;
 		{
 			cbi(LCD_PORT_DIO, DIO);
 		}
-		//delay_us(1);
+		delay_us(1);
 		
 		cbi(LCD_PORT_SCK, SCK);		// send clock pulse
-//+		delay_us(1);
+		delay_us(1);
 		sbi(LCD_PORT_SCK, SCK);
 
 		data <<= 1;
@@ -191,57 +193,26 @@ void LCDInit(void)
 	sbi(LCD_PORT_DIO, DIO);
 	delay_us(10);
 	
-	LCDCommand(DISCTL);		// display control(EPSON)
-	LCDData(0x0C);			// 12 = 1100 - CL dividing ratio [don't divide] switching period 8H (default)
-	LCDData(0x20);	
-	//LCDData(0x02);
-	LCDData(0x00);
-	
-	LCDData(0x01);
-	
-	LCDCommand(COMSCN);		// common scanning direction(EPSON)
-	LCDData(0x01);
-	
-	LCDCommand(OSCON);		// internal oscialltor ON(EPSON)
-	
-	LCDCommand(SLPOUT);		// sleep out(EPSON)
 	LCDCommand(P_SLEEPOUT);	//sleep out(PHILLIPS)
 	
-	LCDCommand(PWRCTR);		// power ctrl(EPSON)
-	LCDData(0x0F);			//everything on, no external reference resistors
-	LCDCommand(P_BSTRON);	//Booset On(PHILLIPS)
+	//LCDCommand(P_BSTRON);	//Booset On(PHILLIPS)
 	
-	LCDCommand(DISINV);		// invert display mode(EPSON)
 	LCDCommand(P_INVON);	// invert display mode(PHILLIPS)
 	
-	LCDCommand(DATCTL);		// data control(EPSON)
-	LCDData(0x03);			// correct for normal sin7
-	LCDData(0x00);			// normal RGB arrangement
-	//LCDData(0x01);		// 8-bit Grayscale
-	LCDData(0x02);			// 16-bit Grayscale Type A
+	LCDCommand(P_COLMOD);	// Set Color Mode(PHILLIPS)
+	LCDData(0x03);	
 	
-	LCDCommand(P_MADCTL);	//Memory Access Control(PHILLIPS)
+        LCDCommand(P_MADCTL);	//Memory Access Control(PHILLIPS)
 	LCDData(0xC8);
 	
-	LCDCommand(P_COLMOD);	// Set Color Mode(PHILLIPS)
-	LCDData(0x02);	
-	
-	LCDCommand(VOLCTR);		// electronic volume, this is the contrast/brightness(EPSON)
-	//LCDData(0x18);		// volume (contrast) setting - fine tuning, original
-	LCDData(0x24);			// volume (contrast) setting - fine tuning, original
-	LCDData(0x03);			// internal resistor ratio - coarse adjustment
 	LCDCommand(P_SETCON);	// Set Contrast(PHILLIPS)
-	LCDData(0x30);	
-	
-	LCDCommand(NOP);		// nop(EPSON)
-	LCDCommand(P_NOP);		// nop(PHILLIPS)
+	LCDData(0x50);
 	
 	delay_ms(200);
 
-	LCDCommand(DISON);		// display on(EPSON)
 	LCDCommand(P_DISPON);	// display on(PHILLIPS)
+delay_ms(200);
 }
-
 
 //************************************************************************
 //Usage: LCDSetPixel(white, 0, 0);
@@ -281,18 +252,21 @@ void LCDSetPixel(int color, unsigned char x, unsigned char y)
 		//LCDData(NOP);
 	#endif
 	#ifdef	PHILLIPS
-		LCDCommand(PASETP);	// page start/end ram
+		LCDCommand(P_PASET);	// page start/end ram
 		LCDData(x);
+                LCDData(x);
 		LCDData(ENDPAGE);
 	
-		LCDCommand(CASETP);	// column start/end ram
+		LCDCommand(P_CASET);	// column start/end ram
 		LCDData(y);
+                LCDData(y);
 		LCDData(ENDCOL);
 	
-		LCDCommand(RAMWRP);	// write
+		LCDCommand(P_RAMWR);	// write
 		
 		LCDData((unsigned char)((color>>4)&0x00FF));
 		LCDData((unsigned char)(((color&0x0F)<<4)|0x00));
+                LCDData(P_NOP);
 	#endif
 
 }
@@ -428,67 +402,67 @@ LCDSetLine(x1, y0, x1, y1, color);
 //"http://www.sparkfun.com/tutorial/Nokia%206100%20LCD%20Display%20Driver.pdf"
 //*****************************************************************************
 void LCDPutChar(char c, int x, int y, int fColor, int bColor) {
-	y	=	(COL_HEIGHT - 1) - y; // make display "right" side up
-	x	=	(ROW_LENGTH - 2) - x;
-extern const unsigned char FONT8x16[97][16];
-
-int             i,j;
-unsigned int    nCols;
-unsigned int    nRows;
-unsigned int    nBytes;
-unsigned char   PixelRow;
-unsigned char   Mask;
-unsigned int    Word0;
-unsigned int    Word1;
-unsigned char   *pFont;
-unsigned char   *pChar;
-                                
-// get pointer to the beginning of the selected font table
-pFont = (unsigned char *)FONT8x16;
-// get the nColumns, nRows and nBytes
-nCols = *pFont;
-nRows = *(pFont + 1);
-nBytes = *(pFont + 2);
-// get pointer to the last byte of the desired character
-pChar = pFont + (nBytes * (c - 0x1F)) + nBytes - 1;
-// Row address set (command 0x2B)
-LCDCommand(PASET);
-LCDData(x);
-LCDData(x + nRows - 1);
-// Column address set (command 0x2A)
-LCDCommand(CASET);
-LCDData(y);
-LCDData(y + nCols - 1);
-// WRITE MEMORY
-LCDCommand(RAMWR);
-// loop on each row, working backwards from the bottom to the top
-for (i = nRows - 1; i >= 0; i--) {
-  // copy pixel row from font table and then decrement row
-  PixelRow = *pChar++;
-  // loop on each pixel in the row (left to right)
-  // Note: we do two pixels each loop
-  Mask = 0x80;
-  for (j = 0; j < nCols; j += 2) {
-    // if pixel bit set, use foreground color; else use the background color
-    // now get the pixel color for two successive pixels
-    if ((PixelRow & Mask) == 0)
-    Word0 = bColor;
-    else
-    Word0 = fColor;
-    Mask = Mask >> 1;
-    if ((PixelRow & Mask) == 0)
-    Word1 = bColor;
-    else
-    Word1 = fColor;
-    Mask = Mask >> 1;
-    // use this information to output three data bytes
-    LCDData((Word0 >> 4) & 0xFF);
-    LCDData(((Word0 & 0xF) << 4) | ((Word1 >> 8) & 0xF));
-    LCDData(Word1 & 0xFF);
+	//y	=	(COL_HEIGHT - 1) - y; // make display "right" side up
+	//x	=	(ROW_LENGTH - 2) - x;
+  extern const unsigned char FONT8x16[97][16];
+  
+  int             i,j;
+  unsigned int    nCols;
+  unsigned int    nRows;
+  unsigned int    nBytes;
+  unsigned char   PixelRow;
+  unsigned char   Mask;
+  unsigned int    Word0;
+  unsigned int    Word1;
+  unsigned char   *pFont;
+  unsigned char   *pChar;
+                                  
+  // get pointer to the beginning of the selected font table
+  pFont = (unsigned char *)FONT8x16;
+  // get the nColumns, nRows and nBytes
+  nCols = *pFont;
+  nRows = *(pFont + 1);
+  nBytes = *(pFont + 2);
+  // get pointer to the last byte of the desired character
+  pChar = pFont + (nBytes * (c - 0x1F)) + nBytes - 1;
+  // Row address set (command 0x2B)
+  LCDCommand(P_PASET);
+  LCDData(x);
+  LCDData(x + nRows - 1);
+  // Column address set (command 0x2A)
+  LCDCommand(P_CASET);
+  LCDData(y);
+  LCDData(y + nCols - 1);
+  // WRITE MEMORY
+  LCDCommand(P_RAMWR);
+  // loop on each row, working backwards from the bottom to the top
+  for (i = nRows - 1; i >= 0; i--) {
+    // copy pixel row from font table and then decrement row
+    PixelRow = *pChar++;
+    // loop on each pixel in the row (left to right)
+    // Note: we do two pixels each loop
+    Mask = 0x80;
+    for (j = 0; j < nCols; j += 2) {
+      // if pixel bit set, use foreground color; else use the background color
+      // now get the pixel color for two successive pixels
+      if ((PixelRow & Mask) == 0)
+      Word0 = bColor;
+      else
+      Word0 = fColor;
+      Mask = Mask >> 1;
+      if ((PixelRow & Mask) == 0)
+      Word1 = bColor;
+      else
+      Word1 = fColor;
+      Mask = Mask >> 1;
+      // use this information to output three data bytes
+      LCDData((Word0 >> 4) & 0xFF);
+      LCDData(((Word0 & 0xF) << 4) | ((Word1 >> 8) & 0xF));
+      LCDData(Word1 & 0xFF);
+    }
   }
-}
-// terminate the Write Memory command
-LCDCommand(NOP);
+  // terminate the Write Memory command
+  LCDCommand(P_NOP);
 }
 // *************************************************************************************************
 //LCDPutStr.c

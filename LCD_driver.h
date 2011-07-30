@@ -1,5 +1,5 @@
-//#define	PHILLIPS
-#define	EPSON
+#define	PHILLIPS
+//#define	EPSON
 
 #ifdef __cplusplus
 extern "C" {
@@ -82,7 +82,7 @@ void LCDDrawCircle (int xCenter, int yCenter, int radius, int color, int circleT
 //********************************************************************
 //LCD Commands
 //*	Apr  4,	2010	<MLS> see definitions below, 
-#if 0
+#if 1
 	#define	NOPP		0x00	// nop 
 	#define	BSTRON		0x03	
 	#define SLEEPIN     0x10	
