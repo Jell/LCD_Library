@@ -1,0 +1,12 @@
+* Arduino LCD_Library
+
+This is a Library for sparkfun's Nokia LCD screen shield for Arduino (http://www.sparkfun.com/products/9363#comment_43350).
+
+This is based on the work of Peter Davenport (http://peterdavenport.posterous.com/pages/prodjects).
+
+This Driver only works for the PHILLIPS controller (for now), if your shield has an EPSON controller, then go with Peter's driver.
+
+Feel free to fork and improve!
+
+/Jean-Louis
+
