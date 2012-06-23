@@ -1,3 +1,4 @@
+// Choose between PHILLIPS and EPSON here
 #define	PHILLIPS
 //#define	EPSON
 
@@ -5,25 +6,92 @@
 extern "C" {
 #endif
 
+#include "LCD_font.h"
+
 //********************************************************************
 //
 //        General Function Definitions
 //
 //********************************************************************
-void LCDCommand(unsigned char data);
-void LCDData(unsigned char data);
+void LCDIoInit(void);
 void LCDInit(void);
 void LCDClear(int color);
-void LCDPrintLogo(void);
-void LCDContrast(char setting);
-void LCDSetPixel(int color, unsigned char x, unsigned char y);
-void ioinit(void);
-void LCDSetLine(int x0, int y0, int x1, int y1, int color);
-void LCDSetRect(int x0, int y0, int x1, int y1, unsigned char fill, int color);
+void LCDDrawPixel(int color, unsigned char x, unsigned char y);
+void LCDDrawLine(int x0, int y0, int x1, int y1, int color);
+void LCDDrawFrame(int x0, int y0, int x1, int y1, int color);
+void LCDDrawRectangle(int x0, int y0, int x1, int y1, int color);
+void LCDDrawCircle (int xCenter, int yCenter, int radius, int color);
 void LCDPutChar(char c, int x, int y, int fColor, int bColor);
-void LCDPutStr(char *pString, int x, int y, int fColor, int bColor);
+void LCDPutString(char *pString, int x, int y, int fColor, int bColor);
 void LCDContrast(char setting);
-void LCDDrawCircle (int xCenter, int yCenter, int radius, int color, int circleType);
+void LCDCommand(unsigned char data);
+void LCDData(unsigned char data);
+
+//*******************************************************
+//        12-Bit Color Definitions
+//*******************************************************
+#ifdef PHILLIPS
+
+// Colors are Yellow-Magenta-Cyan, ie. CMY but in reverse order.
+// Conversion:
+// Y = 1 - B
+// M = 1 - G
+// C = 1 - R
+#define WHITE   0x000
+#define BLACK   0xFFF
+#define RED     0xFF0
+#define GREEN   0xF0F
+#define BLUE    0x0FF
+#define CYAN    0x00F
+#define MAGENTA 0x0F0
+#define YELLOW  0xF00
+#define BROWN   0xDCA
+#define ORANGE  0xFA0
+#define PINK    0x490
+
+#else
+
+#define WHITE   0xFFF
+#define BLACK   0x000
+#define RED     0xF00
+#define GREEN   0x0F0
+#define BLUE    0x00F
+#define CYAN    0x0FF
+#define MAGENTA 0xF0F
+#define YELLOW  0xF00
+#define BROWN   0x532
+#define ORANGE  0xFA0
+#define PINK    0xF6B
+
+#endif
+
+//*******************************************************
+//        Button Pin Definitions
+//*******************************************************
+#define kSwitch1_PIN  3
+#define kSwitch2_PIN  4
+#define kSwitch3_PIN  5
+
+#define _USE_ARDUINO_FOR_NOKIA_
+
+//* Arduino pin number defs
+#define LCD_RES_PIN 8
+#define CS_PIN      9
+#define DIO_PIN     11
+#define SCK_PIN     13
+
+//* Arduino Duemilanove bit numbers
+#define LCD_RES 0  // D8
+#define CS      1  // D9
+#define DIO     3  // D11
+#define SCK     5  // D13
+//#define LCD_PORT  PORTB
+
+//* Arduino Duemilanove ports
+#define LCD_PORT_CS   PORTB
+#define LCD_PORT_SCK  PORTB
+#define LCD_PORT_RES  PORTB
+#define LCD_PORT_DIO  PORTB
 
 //********************************************************************
 //
@@ -76,14 +144,10 @@ void LCDDrawCircle (int xCenter, int yCenter, int radius, int color, int circleT
 #define NOP         0x25
 
 //*************************************************************************************
-//  LCD Include File for Philips PCF8833 STN RGB- 132x132x3 Driver 
+//  LCD Include File for Philips PCF8833 STN RGB- 132x132x3 Driver
 //
-//    Taken from Philips data sheet Feb 14, 2003 
+//    Taken from Philips data sheet Feb 14, 2003
 //*************************************************************************************
-//* I changed them to P_ for Philips
-//* many of these commands are not used but I wanted them all listed in case
-//* anyone wants to write more features
-//  Philips PCF8833 LCD controller command codes 
 #define P_NOP       0x00  // nop
 #define P_SWRESET   0x01  // software reset
 #define P_BSTROFF   0x02  // booster voltage OFF
@@ -133,122 +197,7 @@ void LCDDrawCircle (int xCenter, int yCenter, int radius, int color, int circleT
 #define P_RDID1     0xDA  // read ID1
 #define P_RDID2     0xDB  // read ID2
 #define P_RDID3     0xDC  // read ID3
- 
 
-//*******************************************************
-//        12-Bit Color Definitions
-//*******************************************************
-#define WHITE   0xFFF
-#define BLACK   0x000
-#define RED     0xF00
-#define GREEN   0x0F0
-#define BLUE    0x00F
-#define CYAN    0x0FF
-#define MAGENTA 0xF0F
-#define YELLOW  0xFF0
-#define BROWN   0xB22
-#define ORANGE  0xFA0
-#define PINK    0xF6A
-
-typedef struct
-{
-	unsigned char red;
-	unsigned char green;
-	unsigned char blue;
-} RGBColor;
-
-
-#ifdef __cplusplus
-}
-#endif
-//*******************************************************
-//        Button Pin Definitions
-//*******************************************************
-#define kSwitch1_PIN  3
-#define kSwitch2_PIN  4
-#define kSwitch3_PIN  5
-
-//*******************************************************
-//                              Circle Definitions
-//*******************************************************
-#define FULLCIRCLE 1
-#define OPENSOUTH  2
-#define OPENNORTH  3
-#define OPENEAST   4
-#define OPENWEST   5
-#define OPENNORTHEAST 6
-#define OPENNORTHWEST 7
-#define OPENSOUTHEAST 8
-#define OPENSOUTHWEST 9
-
-// *************************************************************************************
-// NOKIA TESTER.h
-// *************************************************************************************
-void delay_us(int x);
-void delay_ms(int x);
-void ioinit(void);
-void reset(void);
-
-// New
-//************************************************************************
-//* adapted for Arduino and Mega by Mark Sproul
-//* Pin definitions
-//*   RES   Reset         Digital Pin 8
-//*   CS    Chip Select   Digital Pin 9
-//*   DIO   Data I/O      Digital Pin 11
-//*   SCK   Serial Clock  Digital Pin 13
-//************************************************************************
-//*   At first I tried to port it to the Arduino pin model, i.e. digitalWrite.
-//*   As I feared, it introduced a noticeable decrease in speed.  For the LCD
-//*   interface it needs to stay as it was. I now have it fully working on the
-//*   mega utilizing the original code. This was done by modifying the pin
-//*   definitions in the .h file.  Very straight forward and very clean. In fact
-//*   it worked first shot on the Mega.
-//************************************************************************
-//* these define the PORT and BIT number for each control pin
-#define _USE_ARDUINO_FOR_NOKIA_
-
-//* Arduino pin number defs
-#define LCD_RES_PIN 8
-#define CS_PIN      9
-#define DIO_PIN     11
-#define SCK_PIN     13
-
-#ifdef __AVR_ATmega1280__
-  //* Arduino Mega bit numbers
-  #define LCD_RES   5   // D8
-  #define CS        6   // D9
-  #define DIO       5   // D11
-  #define SCK       7   // D13
-
-  //* Arduino Mega ports
-  #define LCD_PORT_CS   PORTH
-  #define LCD_PORT_SCK  PORTB
-  #define LCD_PORT_RES  PORTH
-  #define LCD_PORT_DIO  PORTB
-#else
-  //* Arduino Duemilanove bit numbers
-  #define LCD_RES 0  // D8
-  #define CS      1  // D9
-  #define DIO     3  // D11
-  #define SCK     5  // D13
-  //#define LCD_PORT  PORTB
-
-  //* Arduino Duemilanove ports
-  #define LCD_PORT_CS   PORTB
-  #define LCD_PORT_SCK  PORTB
-  #define LCD_PORT_RES  PORTB
-  #define LCD_PORT_DIO  PORTB
-#endif
-
-
-/* Old
-#define CS        2   // D10
-#define SCK       3   // D11
-#define LCD_RES   1   // D9
-#define DIO       4   // D12
-#define LCD_PORT  PORTB
-*/
 
 //*******************************************************
 //          Macros
@@ -260,3 +209,7 @@ void reset(void);
 //          General Definitions
 //*******************************************************
 #define MYUBRR 16   //Used to set the AVR Baud Rate TO 115200 (External 16MHz Oscillator)
+
+#ifdef __cplusplus
+}
+#endif

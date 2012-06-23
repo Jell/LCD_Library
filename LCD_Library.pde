@@ -1,23 +1,5 @@
-//************************************************************************
-//					Nokia Shield
-//************************************************************************
-//* Derived from code by James P. Lynch and Mark Sproul.	
-//*
-//*Edit History
-//*             <MLS>   = Mark Sproul, msproul -at- jove.rutgers.edu
-//*             <PD>    = Peter Davenport, electrifiedpete -at- gmail.com
-//*             <JLG>   = Jean-Louis Giordano, jell_del_sol -at- hotmail.com
-//************************************************************************
-//*     Apr  2, 2010  <MLS> I received my Color LCD Shield sku: LCD-09363 from sparkfun.
-//*     Apr  2, 2010  <MLS> The code was written for WinAVR, I modified it to compile under Arduino.
-//*     Aug  7, 2010    <PD> Organized code and removed unneccesary elements.
-//*     Aug 23, 2010    <PD> Added LCDSetLine, LCDSetRect, and LCDPutStr.
-//*     Oct 31, 2010    <PD> Added circle code from Carl Seutter and added contrast code.
-//*     Jul 30, 2011    <JLG> Changed library to work with Phillips controller.
-//************************************************************************
 //    External Component Libs
 #include "LCD_driver.h"
-//#include "nokia_tester.h"
 //    Included files
 #include <string.h>
 #include <stdlib.h>
@@ -27,105 +9,50 @@
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include "WProgram.h"
-#include "HardwareSerial.h"
 
-//************************************************************************
-//            Main Code
-//************************************************************************
 void  setup()
 {
-  ioinit();           //Initialize I/O
-  LCDInit();          //Initialize the LCD
-  LCDClear(GREEN);    // Clear LCD to a solid color
-  LCDPutStr("Click a button!", 0, 4, ORANGE, WHITE); // Write instructions on display
-  LCDPutStr("This library", 32, 4, BLACK, WHITE);
-  LCDPutStr("is for world", 48, 4, BLACK, WHITE);
-  LCDPutStr("domination!", 64, 4, BLACK, WHITE);
-  LCDPutStr("and other", 80, 4, BLACK, WHITE);
-  LCDPutStr("fun stuff.", 96, 4, BLACK, WHITE);
+  LCDIoInit();        // Initialize I/O
+  LCDInit();          // Initialize the LCD
+  LCDClear(WHITE);    // Clear LCD to a solid color
+
+  LCDDrawRectangle(  1, 1,  9, 10, WHITE);
+  LCDDrawRectangle( 10, 1, 19, 10, BLACK);
+  LCDDrawRectangle( 20, 1, 29, 10, RED);
+  LCDDrawRectangle( 30, 1, 39, 10, GREEN);
+  LCDDrawRectangle( 40, 1, 49, 10, BLUE);
+  LCDDrawRectangle( 50, 1, 59, 10, CYAN);
+  LCDDrawRectangle( 60, 1, 69, 10, MAGENTA);
+  LCDDrawRectangle( 70, 1, 79, 10, YELLOW);
+  LCDDrawRectangle( 80, 1, 89, 10, BROWN);
+  LCDDrawRectangle( 90, 1, 99, 10, ORANGE);
+  LCDDrawRectangle(100, 1,109, 10, PINK);
+
+  LCDDrawFrame(  1, 11,  9, 20, WHITE);
+  LCDDrawFrame( 10, 11, 19, 20, BLACK);
+  LCDDrawFrame( 20, 11, 29, 20, RED);
+  LCDDrawFrame( 30, 11, 39, 20, GREEN);
+  LCDDrawFrame( 40, 11, 49, 20, BLUE);
+  LCDDrawFrame( 50, 11, 59, 20, CYAN);
+  LCDDrawFrame( 60, 11, 69, 20, MAGENTA);
+  LCDDrawFrame( 70, 11, 79, 20, YELLOW);
+  LCDDrawFrame( 80, 11, 89, 20, BROWN);
+  LCDDrawFrame( 90, 11, 99, 20, ORANGE);
+  LCDDrawFrame(100, 11,109, 20, PINK);
+
+  LCDPutString("test.", 1, 21, BLACK, WHITE);
+  LCDPutString("test?", 1, 41, GREEN, WHITE);
+  LCDPutString("test!", 1, 61, RED, WHITE);
+
+  LCDDrawCircle(65, 65, 10, BLUE);
+  LCDDrawLine(64, 65, 66, 65, RED);
+  LCDDrawLine(65, 64, 65, 66, RED);
+
+  LCDDrawLine(60, 90,  70, 100, GREEN);
+  LCDDrawLine(60, 100, 70, 90, GREEN);
 }
-int num = 1;
-//************************************************************************
-//          Loop
-//************************************************************************
+
 void  loop()
 {
-  int s1, s2, s3;
-  s1 = !digitalRead(kSwitch1_PIN);
-  s2 = !digitalRead(kSwitch2_PIN);
-  s3 = !digitalRead(kSwitch3_PIN);
-
-  if (s1){
-    LCDClear(ORANGE);    // Clear LCD to ORANGE
-    LCDPutStr("Lines!", 1, 4, ORANGE, WHITE); // Write information on display
-    LCDSetLine(45, 5, 21, 130, BLACK); // Write a bunch of lines
-    LCDSetLine(46, 5, 22, 130, RED);
-    LCDSetLine(47, 5, 23, 130, GREEN);
-    LCDSetLine(48, 5, 24, 130, BLUE);
-    LCDSetLine(49, 5, 25, 130, CYAN);
-    LCDSetLine(50, 5, 26, 130, MAGENTA);
-    LCDSetLine(51, 5, 27, 130, YELLOW);
-    LCDSetLine(52, 5, 28, 130, BROWN);
-    LCDSetLine(53, 5, 29, 130, ORANGE);
-    LCDSetLine(54, 5, 30, 130, PINK);
-
-    LCDPutStr("LCDSetLine(x0,", 60, 4, BLUE, WHITE); // Write code information on display
-    LCDPutStr("y0, x1, y1,", 76, 4, BLUE, WHITE);
-    LCDPutStr("color);", 92, 4, BLUE, WHITE);
-
-    LCDSetLine(50, 50, 130, 130, PINK);
-    LCDSetLine(80, 50, 50, 130, BROWN);
-    LCDSetLine(110, 12, 30, 80, BROWN);
-  }
-
-  else if (s2){
-    LCDClear(BLUE);    // Clear LCD to WHITE
-    LCDPutStr("Rectangles!", 1, 4, ORANGE, WHITE); // Write information on display
-    LCDSetRect(20, 20, 50, 60, 1, YELLOW); // filled rectangle
-    LCDSetRect(20, 20, 50, 60, 0, MAGENTA);// Line around filled rectangle
-    LCDSetRect(60, 40, 80, 60, 0, GREEN);// Unfilled rectangle
-    LCDSetRect(60, 70, 80, 120, 0, BLUE);// Unfilled rectangle number 2
-    LCDSetRect(20, 70, 50, 120, 0, BLUE);// Unfilled rectangle number 3
-    LCDPutStr("LCDSetRect(x0,", 78, 4, BLUE, WHITE); // Write information on display
-    LCDPutStr("y0, x1, y1, ", 94, 4, BLUE, WHITE); // Write information on display
-    LCDPutStr("fill, color);", 110, 4, BLUE, WHITE); // Write information on display
-    //LCDSetRect(x0, y0, x1, y1, fill, color);
-  }
-
-  else if (s3){
-    LCDClear(RED);    // Clear LCD to WHITE
-    LCDPutStr("Setting pixels!", 1, 4, ORANGE, WHITE); // Write information on display
-    LCDSetPixel(BLACK, 30, 10);
-    LCDSetPixel(BLACK, 30, 11);
-    LCDSetPixel(RED, 30, 20);
-    LCDSetPixel(RED, 30, 21);
-    LCDSetPixel(GREEN, 30, 30);
-    LCDSetPixel(GREEN, 30, 31);
-    LCDSetPixel(BLUE, 30, 40);
-    LCDSetPixel(BLUE, 30, 41);
-    LCDSetPixel(CYAN, 30, 50);
-    LCDSetPixel(CYAN, 30, 51);
-    LCDSetPixel(MAGENTA, 30, 60);
-    LCDSetPixel(MAGENTA, 30, 61);
-    LCDSetPixel(YELLOW, 30, 70);
-    LCDSetPixel(YELLOW, 30, 71);
-    LCDSetPixel(BROWN, 30, 80);
-    LCDSetPixel(BROWN, 30, 81);
-    LCDSetPixel(ORANGE, 30, 90);
-    LCDSetPixel(ORANGE, 30, 91);
-    LCDSetPixel(PINK, 30, 100);
-    LCDSetPixel(PINK, 30, 101);
-    LCDPutStr("LCDSetPixel", 40, 4, BLUE, WHITE);
-    LCDPutStr("(color, x, y);", 56, 4, BLUE, WHITE);
-    LCDPutStr("& circles.", 88, 4, BLUE, WHITE);
-    LCDDrawCircle (55, 55, 30, RED, FULLCIRCLE); // draw a circle
-    LCDDrawCircle (70, 70, 20, BLUE, FULLCIRCLE); // draw a circle
-    LCDDrawCircle (85, 85, 10, GREEN, FULLCIRCLE); // draw a circle
-  }
-  s1 = 0;
-  s2 = 0;
-  s3 = 0;
-  delay(200);
-
+  delay(100);
 }
-
