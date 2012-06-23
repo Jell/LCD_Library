@@ -206,7 +206,7 @@ void reset(void);
 //*   it worked first shot on the Mega.
 //************************************************************************
 //* these define the PORT and BIT number for each control pin
-#define _USE_ARDUINO_FOR_NOKIEA_
+#define _USE_ARDUINO_FOR_NOKIA_
 
 //* Arduino pin number defs
 #define LCD_RES_PIN 8

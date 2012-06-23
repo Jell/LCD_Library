@@ -25,8 +25,8 @@
 #include <avr/pgmspace.h>
 
 
-#ifdef _USE_ARDUINO_FOR_NOKIEA_
-  #include "WProgram.h"
+#ifdef _USE_ARDUINO_FOR_NOKIA_
+#include "WProgram.h"
 #endif
 
 //************************************************************************
@@ -51,7 +51,7 @@ void LCDClear(int color)
 
   LCDCommand(RAMWR);
 #endif
-#ifdef PHILLIPS
+#ifdef	PHILLIPS
   LCDCommand(P_PASET);
   LCDData(0);
   LCDData(131);
@@ -64,14 +64,14 @@ void LCDClear(int color)
 #endif
 
   for (i=0; i < (131*131)/2; i++)
-  {
+    {
 
-    LCDData((color >> 4) & 0x00FF);
-    LCDData(((color & 0x0F) << 4) | ((color >> 8) & 0x0F));
-    LCDData(color & 0x0FF);   // nop(EPSON)
-  }
-  // x_offset = 0;
-  // y_offset = 0;
+      LCDData((color >> 4) & 0x00FF);
+      LCDData(((color & 0x0F) << 4) | ((color >> 8) & 0x0F));
+      LCDData(color & 0x0FF);		// nop(EPSON)
+    }
+  //	x_offset = 0;
+  //	y_offset = 0;
 }
 
 
@@ -108,23 +108,23 @@ void LCDCommand(unsigned char data)
   delay_us(1);
 
   for (jj = 0; jj < 8; jj++)
-  {
-    if ((data & 0x80) == 0x80)
     {
-      sbi(LCD_PORT_DIO, DIO);
-    }
-    else
-    {
-      cbi(LCD_PORT_DIO, DIO);
-    }
-    delay_us(1);
+      if ((data & 0x80) == 0x80)
+        {
+          sbi(LCD_PORT_DIO, DIO);
+        }
+      else
+        {
+          cbi(LCD_PORT_DIO, DIO);
+        }
+      delay_us(1);
 
-    cbi(LCD_PORT_SCK, SCK);   // send clock pulse
-    delay_us(1);
-    sbi(LCD_PORT_SCK, SCK);
+      cbi(LCD_PORT_SCK, SCK);   // send clock pulse
+      delay_us(1);
+      sbi(LCD_PORT_SCK, SCK);
 
-    data <<= 1;
-  }
+      data <<= 1;
+    }
 
   sbi(LCD_PORT_CS, CS);       // disable
 }
@@ -149,23 +149,23 @@ void LCDData(unsigned char data)
   delay_us(1);
 
   for (j = 0; j < 8; j++)
-  {
-    if ((data & 0x80) == 0x80)
     {
-      sbi(LCD_PORT_DIO, DIO);
-    }
-    else
-    {
-      cbi(LCD_PORT_DIO, DIO);
-    }
-    delay_us(1);
+      if ((data & 0x80) == 0x80)
+        {
+          sbi(LCD_PORT_DIO, DIO);
+        }
+      else
+        {
+          cbi(LCD_PORT_DIO, DIO);
+        }
+      delay_us(1);
 
-    cbi(LCD_PORT_SCK, SCK);     // send clock pulse
-    delay_us(1);
-    sbi(LCD_PORT_SCK, SCK);
+      cbi(LCD_PORT_SCK, SCK);     // send clock pulse
+      delay_us(1);
+      sbi(LCD_PORT_SCK, SCK);
 
-    data <<= 1;
-  }
+      data <<= 1;
+    }
 
   LCD_PORT_CS |= (1<<CS);      // disable
 }
@@ -285,11 +285,12 @@ void  ioinit(void)
   digitalWrite(kSwitch3_PIN, HIGH);
 
 
-#ifdef _USE_ARDUINO_FOR_NOKIEA_
+#ifdef _USE_ARDUINO_FOR_NOKIA_
 
   //* do the LCD control lines
   pinMode(CS_PIN,       OUTPUT);
   pinMode(DIO_PIN,      OUTPUT);
+
   pinMode(SCK_PIN,      OUTPUT);
   pinMode(LCD_RES_PIN,  OUTPUT);
 
@@ -313,7 +314,7 @@ void  ioinit(void)
   // Init timer 2
   //Set Prescaler to 8. (Timer Frequency set to 16Mhz)
   //Used for delay routines
-  TCCR2B = (1<<CS20); //Divde clock by 1 for 16 Mhz Timer 2 Frequency	
+  TCCR2B = (1<<CS20); //Divde clock by 1 for 16 Mhz Timer 2 Frequency
 #endif
 }
 
@@ -603,7 +604,7 @@ void LCDContrast(char setting) {
   LCDCommand(VOLCTR);        // electronic volume, this is the contrast/brightness(EPSON)
   LCDData(setting);        // volume (contrast) setting - course adjustment,  -- original was 24
   //     LCDData(0x03);            // internal resistor ratio - coarse adjustment
-  //     LCDData(0x30);   
+  //     LCDData(0x30);
 
   LCDCommand(NOP);        // nop(EPSON)
 }
@@ -659,5 +660,3 @@ void LCDDrawCircle (int xCenter, int yCenter, int radius, int color, int circleT
     x1++;
   }
 }
-
-
