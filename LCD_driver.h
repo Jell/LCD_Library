@@ -6,8 +6,6 @@
 extern "C" {
 #endif
 
-#include "LCD_font.h"
-
 //********************************************************************
 //
 //        General Function Definitions
